@@ -60,11 +60,10 @@ type sdConfig struct {
 
 // Discovery retrieves targets information from Scaleway API and updates them via watches.
 type discovery struct {
-	token            string
-	refreshInterval  int
-	clientDatacenter string
-	tagSeparator     string
-	logger           log.Logger
+	token           string
+	refreshInterval int
+	tagSeparator    string
+	logger          log.Logger
 }
 
 func (d *discovery) parseServiceNodes(nodes []scwTypes.ScalewayServer, name string) *targetgroup.Group {
