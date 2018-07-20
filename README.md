@@ -20,3 +20,12 @@ Start the discoverer:
 ```
 ./scw-sd --token="$TOKEN" --output.file="scw_sd.json"
 ```
+
+Using servers private IP and custom port:
+```
+./scw-sd \
+    --token="$TOKEN"            \
+    --output.file="scw_sd.json" \
+    --port="1234"               \
+    --private
+```
