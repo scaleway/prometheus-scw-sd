@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -39,16 +40,16 @@ var (
 
 	// addressLabel is the name for the label containing a target's address.
 	addressLabel = model.MetaLabelPrefix + "scw_address"
-	// nodeLabel is the name for the label containing a target's node name.
-	nodeLabel = model.MetaLabelPrefix + "scw_node"
+	// srvLabel is the name for the label containing a target's server name.
+	srvLabel = model.MetaLabelPrefix + "scw_node"
 	// tagsLabel is the name of the label containing the tags assigned to the target.
 	tagsLabel = model.MetaLabelPrefix + "scw_tags"
 	// serviceIDLabel is the name of the label containing the service ID.
 	serviceIDLabel = model.MetaLabelPrefix + "scw_id"
-	// nodeType is the name of the label containing the commercial type.
-	nodeType = model.MetaLabelPrefix + "scw_type"
-	// nodeArch is the name of the label containing the commercial arch.
-	nodeArch = model.MetaLabelPrefix + "scw_arch"
+	// srvType is the name of the label containing the commercial type.
+	srvType = model.MetaLabelPrefix + "scw_type"
+	// srvArch is the name of the label containing the commercial arch.
+	srvArch = model.MetaLabelPrefix + "scw_arch"
 )
 
 // Note: create a config struct for Scaleway SD type here.
@@ -66,35 +67,34 @@ type discovery struct {
 	logger          log.Logger
 }
 
-func (d *discovery) parseServiceNodes(nodes []scwTypes.ScalewayServer, name string) *targetgroup.Group {
+func (d *discovery) appendScalewayServer(tgs []*targetgroup.Group, server scwTypes.ScalewayServer) []*targetgroup.Group {
+	addr := net.JoinHostPort(server.PublicAddress.IP, fmt.Sprintf("%d", 9100))
+	target := model.LabelSet{model.AddressLabel: model.LabelValue(addr)}
+	// https://github.com/prometheus/prometheus/blob/master/documentation/examples/custom-sd/adapter-usage/main.go#L117
+	tags := "," + strings.Join(server.Tags, ",") + ","
+	labels := model.LabelSet{
+		model.LabelName(srvArch):   model.LabelValue(server.Arch),
+		model.LabelName(tagsLabel): model.LabelValue(tags),
+		model.LabelName(srvType):   model.LabelValue(server.CommercialType),
+		// model.AddressLabel:            model.LabelValue(addr),
+		// model.LabelName(addressLabel): model.LabelValue(server.PublicAddress.IP),
+		// model.LabelName(serviceIDLabel): model.LabelValue(server.Identifier),
+	}
+	for i := range tgs {
+		if reflect.DeepEqual(tgs[i].Labels, labels) {
+			tgs[i].Targets = append(tgs[i].Targets, target)
+			return tgs
+		}
+	}
 	tgroup := targetgroup.Group{
-		Source: name,
+		Source: server.Name,
 		Labels: make(model.LabelSet),
 	}
-	tgroup.Targets = make([]model.LabelSet, 0, len(nodes))
-
-	for _, node := range nodes {
-		// We surround the separated list with the separator as well. This way regular expressions
-		// in relabeling rules don't have to consider tag positions.
-		var tags = "," + strings.Join(node.Tags, ",") + ","
-
-		// If the service address is not empty it should be used instead of the node address
-		// since the service may be registered remotely through a different node.
-		var addr string
-		addr = net.JoinHostPort(node.PublicAddress.IP, fmt.Sprintf("%d", 9100))
-		target := model.LabelSet{model.AddressLabel: model.LabelValue(addr)}
-		labels := model.LabelSet{
-			model.AddressLabel:              model.LabelValue(addr),
-			model.LabelName(addressLabel):   model.LabelValue(node.PublicAddress.IP),
-			model.LabelName(nodeArch):       model.LabelValue(node.Arch),
-			model.LabelName(tagsLabel):      model.LabelValue(tags),
-			model.LabelName(serviceIDLabel): model.LabelValue(node.Identifier),
-			model.LabelName(nodeType):       model.LabelValue(node.CommercialType),
-		}
-		tgroup.Labels = labels
-		tgroup.Targets = append(tgroup.Targets, target)
-	}
-	return &tgroup
+	tgroup.Targets = make([]model.LabelSet, 0, 1)
+	tgroup.Labels = labels
+	tgroup.Targets = append(tgroup.Targets, target)
+	tgs = append(tgs, &tgroup)
+	return tgs
 }
 
 // Note: you must implement this function for your discovery implementation as part of the
@@ -108,15 +108,19 @@ func (d *discovery) Run(ctx context.Context, ch chan<- []*targetgroup.Group) {
 			time.Sleep(time.Duration(d.refreshInterval) * time.Second)
 			continue
 		}
-		var tgs []*targetgroup.Group
+		time.Sleep(time.Duration(2) * time.Second) // rate limit
 		srvs, err := client.GetServers(true, 0)
 		if err != nil {
 			level.Error(d.logger).Log("msg", "Error retreiving server list", "err", err)
 			time.Sleep(time.Duration(d.refreshInterval) * time.Second)
 			continue
 		}
-		tg := d.parseServiceNodes(*srvs, "Scaleway")
-		tgs = append(tgs, tg)
+
+		var tgs []*targetgroup.Group
+		for _, srv := range *srvs {
+			level.Info(d.logger).Log("msg", fmt.Sprintf("Found server: %s", srv.Name))
+			tgs = d.appendScalewayServer(tgs, srv)
+		}
 
 		if err == nil {
 			// We're returning all Scaleway services as a single targetgroup.
