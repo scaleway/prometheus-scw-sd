@@ -34,20 +34,14 @@ import (
 
 var (
 	a          = kingpin.New("sd adapter usage", "Tool to generate file_sd target files for unimplemented SD mechanisms.")
+	private    = a.Flag("private", "Use servers private IP.").Bool()
 	outputFile = a.Flag("output.file", "Output file for file_sd compatible file.").Default("scw_sd.json").String()
 	token      = a.Flag("token", "The token for Scaleway API.").Default("token").String()
+	port       = a.Flag("port", "Port on which to scrape metrics.").Default("9100").Int()
 	logger     log.Logger
 
-	// addressLabel is the name for the label containing a target's address.
-	addressLabel = model.MetaLabelPrefix + "scw_address"
-	// srvLabel is the name for the label containing a target's server name.
-	srvLabel = model.MetaLabelPrefix + "scw_node"
 	// tagsLabel is the name of the label containing the tags assigned to the target.
 	tagsLabel = model.MetaLabelPrefix + "scw_tags"
-	// serviceIDLabel is the name of the label containing the service ID.
-	serviceIDLabel = model.MetaLabelPrefix + "scw_id"
-	// srvType is the name of the label containing the commercial type.
-	srvType = model.MetaLabelPrefix + "scw_type"
 	// srvArch is the name of the label containing the commercial arch.
 	srvArch = model.MetaLabelPrefix + "scw_arch"
 )
@@ -68,17 +62,19 @@ type discovery struct {
 }
 
 func (d *discovery) appendScalewayServer(tgs []*targetgroup.Group, server scwTypes.ScalewayServer) []*targetgroup.Group {
-	addr := net.JoinHostPort(server.PublicAddress.IP, fmt.Sprintf("%d", 9100))
+	var addr string
+
+	if *private {
+		addr = net.JoinHostPort(server.PrivateIP, fmt.Sprintf("%d", *port))
+	} else {
+		addr = net.JoinHostPort(server.PublicAddress.IP, fmt.Sprintf("%d", *port))
+	}
 	target := model.LabelSet{model.AddressLabel: model.LabelValue(addr)}
-	// https://github.com/prometheus/prometheus/blob/master/documentation/examples/custom-sd/adapter-usage/main.go#L117
+	// Parsing tags: https://github.com/prometheus/prometheus/blob/master/documentation/examples/custom-sd/adapter-usage/main.go#L117
 	tags := "," + strings.Join(server.Tags, ",") + ","
 	labels := model.LabelSet{
-		model.LabelName(srvArch):   model.LabelValue(server.Arch),
+		// model.LabelName(srvArch):   model.LabelValue(server.Arch),
 		model.LabelName(tagsLabel): model.LabelValue(tags),
-		model.LabelName(srvType):   model.LabelValue(server.CommercialType),
-		// model.AddressLabel:            model.LabelValue(addr),
-		// model.LabelName(addressLabel): model.LabelValue(server.PublicAddress.IP),
-		// model.LabelName(serviceIDLabel): model.LabelValue(server.Identifier),
 	}
 	for i := range tgs {
 		if reflect.DeepEqual(tgs[i].Labels, labels) {
@@ -90,8 +86,8 @@ func (d *discovery) appendScalewayServer(tgs []*targetgroup.Group, server scwTyp
 		Source: server.Name,
 		Labels: make(model.LabelSet),
 	}
-	tgroup.Targets = make([]model.LabelSet, 0, 1)
 	tgroup.Labels = labels
+	tgroup.Targets = make([]model.LabelSet, 0, 1)
 	tgroup.Targets = append(tgroup.Targets, target)
 	tgs = append(tgs, &tgroup)
 	return tgs
@@ -118,7 +114,7 @@ func (d *discovery) Run(ctx context.Context, ch chan<- []*targetgroup.Group) {
 
 		var tgs []*targetgroup.Group
 		for _, srv := range *srvs {
-			level.Info(d.logger).Log("msg", fmt.Sprintf("Found server: %s", srv.Name))
+			level.Info(d.logger).Log("msg", fmt.Sprintf("Server found: %s", srv.Name))
 			tgs = d.appendScalewayServer(tgs, srv)
 		}
 
