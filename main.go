@@ -38,6 +38,7 @@ var (
 	outputFile = a.Flag("output.file", "Output file for file_sd compatible file.").Default("scw_sd.json").String()
 	token      = a.Flag("token", "The token for Scaleway API.").Default("token").String()
 	port       = a.Flag("port", "Port on which to scrape metrics.").Default("9100").Int()
+	interval   = a.Flag("time.interval", "Time in second to wait between each refresh.").Default("30").Int()
 	logger     log.Logger
 
 	// tagsLabel is the name of the label containing the tags assigned to the target.
@@ -159,7 +160,7 @@ func main() {
 	cfg := sdConfig{
 		TagSeparator:    ",",
 		Token:           *token,
-		RefreshInterval: 30,
+		RefreshInterval: *interval,
 	}
 
 	disc, err := newDiscovery(cfg)
