@@ -19,6 +19,7 @@ import (
 	"net"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -62,19 +63,28 @@ type discovery struct {
 	logger          log.Logger
 }
 
-func (d *discovery) appendScalewayServer(tgs []*targetgroup.Group, server scwTypes.ScalewayServer) []*targetgroup.Group {
-	var addr string
-
-	if *private {
-		addr = net.JoinHostPort(server.PrivateIP, fmt.Sprintf("%d", *port))
-	} else {
-		addr = net.JoinHostPort(server.PublicAddress.IP, fmt.Sprintf("%d", *port))
+func scalewayTags(tags []string) string {
+	// We surround the separated list with the separator as well. This way regular expressions
+	// in relabeling rules don't have to consider tag positions.
+	if len(tags) > 0 {
+		sort.Strings(tags)
 	}
+	return "," + strings.Join(tags, ",") + ","
+}
+
+func scalewayAddress(server scwTypes.ScalewayServer) string {
+	if *private {
+		return net.JoinHostPort(server.PrivateIP, fmt.Sprintf("%d", *port))
+	}
+	return net.JoinHostPort(server.PublicAddress.IP, fmt.Sprintf("%d", *port))
+}
+
+func (d *discovery) appendScalewayServer(tgs []*targetgroup.Group, server scwTypes.ScalewayServer) []*targetgroup.Group {
+	addr := scalewayAddress(server)
+	tags := scalewayTags(server.Tags)
 	target := model.LabelSet{model.AddressLabel: model.LabelValue(addr)}
-	// Parsing tags: https://github.com/prometheus/prometheus/blob/master/documentation/examples/custom-sd/adapter-usage/main.go#L117
-	tags := "," + strings.Join(server.Tags, ",") + ","
 	labels := model.LabelSet{
-		// model.LabelName(srvArch):   model.LabelValue(server.Arch),
+		model.LabelName(srvArch):   model.LabelValue(server.Arch),
 		model.LabelName(tagsLabel): model.LabelValue(tags),
 	}
 	for i := range tgs {
