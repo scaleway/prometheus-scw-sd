@@ -35,9 +35,9 @@ import (
 
 var (
 	a          = kingpin.New("sd adapter usage", "Tool to generate file_sd target files for unimplemented SD mechanisms.")
+	token      = a.Flag("token", "The token for Scaleway API.").Required().String()
 	private    = a.Flag("private", "Use servers private IP.").Bool()
 	outputFile = a.Flag("output.file", "Output file for file_sd compatible file.").Default("scw_sd.json").String()
-	token      = a.Flag("token", "The token for Scaleway API.").Default("token").String()
 	port       = a.Flag("port", "Port on which to scrape metrics.").Default("9100").Int()
 	interval   = a.Flag("time.interval", "Time in second to wait between each refresh.").Default("30").Int()
 	logger     log.Logger
