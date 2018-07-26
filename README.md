@@ -1,12 +1,57 @@
 # Prometheus Scaleway SD
 
-prometheus-scw-sd retreives your Scaleway server list and converts to Prometheus targets.
+prometheus-scw-sd retrieves your Scaleway server list and converts to Prometheus targets.
 
-This project is adapted from official [Consul SD](https://github.com/prometheus/prometheus/tree/master/documentation/examples/custom-sd)
+This project is adapted from the official [Consul SD](https://github.com/prometheus/prometheus/tree/master/documentation/examples/custom-sd).
 
 An official Prometheus [blog post](https://prometheus.io/blog/2018/07/05/implementing-custom-sd/) explains how to write a Custom Service Discovery.
 
-## Setup
+## Usage
+
+Download the binary from the last release, corresponding to your own architecture.
+
+Help:
+```
+./scw-sd -h
+```
+
+Start the discoverer:
+```
+./scw-sd --token="$TOKEN" --output.file="scw_sd.json"
+```
+
+Using servers private IP, custom port and time interval in second:
+```
+./scw-sd \
+    --token="$TOKEN"            \
+    --output.file="scw_sd.json" \
+    --time.interval="30"        \
+    --port="1234"               \
+    --private
+```
+
+## Config
+
+Scaleway SD outputs a json file containing targets to scrape.
+You need to include this file in your `prometheus.yml`.
+
+```yml
+scrape_configs:
+  - job_name: 'scw-sd'
+    file_sd_configs:
+      - files:
+        - path/to/scw_sd.json
+```
+
+## Labels
+
+Prometheus SD scrape Scaleway servers tags as labels, as comma separated list of strings.
+This allows you to use regex substitution for relabelling.
+We surround the separated list with the separator as well. This way regular expressions
+in relabeling rules don't have to consider tag positions.
+
+
+## Contribute
 
 Custom SD is part of the Prometheus project, so you'll need to import Prometheus from github, and build Scaleway SD from it.
 
@@ -30,45 +75,3 @@ Build:
 ```
 go build
 ```
-
-## Usage
-
-Help:
-```
-./scw-sd -h
-```
-
-Start the discoverer:
-```
-./scw-sd --token="$TOKEN" --output.file="scw_sd.json"
-```
-
-Using servers private IP, custom port and time interval:
-```
-./scw-sd \
-    --token="$TOKEN"            \
-    --output.file="scw_sd.json" \
-    --time.interval             \
-    --port="1234"               \
-    --private
-```
-
-## Config
-
-Scaleway SD outputs a json file containing targets to scrape.
-You need to include this file into your `prometheus.yml`.
-
-```yml
-scrape_configs:
-  - job_name: 'scw-sd'
-    file_sd_configs:
-      - files:
-        - scw_sd.json
-```
-
-## Labels
-
-Prometheus SD scrape Scaleway servers tags as labels, as comma separated list of strings.
-This allows you to use regex substitution for relabelling.
-We surround the separated list with the separator as well. This way regular expressions
-in relabeling rules don't have to consider tag positions.

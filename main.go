@@ -143,14 +143,14 @@ func (d *discovery) Run(ctx context.Context, ch chan<- []*targetgroup.Group) {
 	}
 }
 
-func newDiscovery(conf sdConfig) (*discovery, error) {
+func newDiscovery(conf sdConfig) *discovery {
 	cd := &discovery{
 		token:           conf.Token,
 		refreshInterval: conf.RefreshInterval,
 		tagSeparator:    conf.TagSeparator,
 		logger:          logger,
 	}
-	return cd, nil
+	return cd
 }
 
 func main() {
@@ -173,10 +173,7 @@ func main() {
 		RefreshInterval: *interval,
 	}
 
-	disc, err := newDiscovery(cfg)
-	if err != nil {
-		fmt.Println("err: ", err)
-	}
+	disc := newDiscovery(cfg)
 	sdAdapter := adapter.NewAdapter(ctx, *outputFile, "ScalewaySD", disc, logger)
 	sdAdapter.Run()
 
