@@ -53,8 +53,6 @@ in relabeling rules don't have to consider tag positions.
 
 ## Contribute
 
-Custom SD is part of the Prometheus project, so you'll need to import Prometheus from github, and build Scaleway SD from it.
-
 Clone prometheus-scw-sd:
 ```
 git clone https://github.com/scaleway/prometheus-scw-sd
