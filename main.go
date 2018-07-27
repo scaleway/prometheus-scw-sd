@@ -23,13 +23,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/scaleway/prometheus-scw-sd/model"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/discovery/targetgroup"
-	"github.com/prometheus/prometheus/documentation/examples/custom-sd/adapter"
 	scwApi "github.com/scaleway/go-scaleway"
 	scwTypes "github.com/scaleway/go-scaleway/types"
+	"github.com/scaleway/prometheus-scw-sd/adapter"
+	"github.com/scaleway/prometheus-scw-sd/targetgroup"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

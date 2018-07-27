@@ -12,21 +12,21 @@ Download the binary from the last release, corresponding to your own architectur
 
 Help:
 ```
-./scw-sd -h
+./prometheus-scw-sd -h
 ```
 
 Start the discoverer:
 ```
-./scw-sd --token="$TOKEN" --output.file="scw_sd.json"
+./prometheus-scw-sd --token="$TOKEN" --output.file="prometheus-scw-sd.json"
 ```
 
 Using servers private IP, custom port and time interval in second:
 ```
-./scw-sd \
-    --token="$TOKEN"            \
-    --output.file="scw_sd.json" \
-    --time.interval="90"        \
-    --port="1234"               \
+./prometheus-scw-sd \
+    --token="$TOKEN"                       \
+    --output.file="prometheus-scw-sd.json" \
+    --time.interval="90"                   \
+    --port="1234"                          \
     --private
 ```
 
@@ -40,7 +40,7 @@ scrape_configs:
   - job_name: 'scw-sd'
     file_sd_configs:
       - files:
-        - path/to/scw_sd.json
+        - path/to/prometheus-scw-sd.json
 ```
 
 ## Labels
@@ -55,20 +55,16 @@ in relabeling rules don't have to consider tag positions.
 
 Custom SD is part of the Prometheus project, so you'll need to import Prometheus from github, and build Scaleway SD from it.
 
-Clone Prometheus and Scaleway client dependency:
-```
-go get -u -v github.com/prometheus/prometheus/...
-go get -u -v github.com/scaleway/go-scaleway/...
-```
-
-Move inside Custom SD folder:
-```
-cd $GOPATH/src/github.com/prometheus/prometheus/documentation/examples/custom-sd
-```
-
 Clone prometheus-scw-sd:
 ```
-git clone https://github.com/scaleway/prometheus-scw-sd && cd scw-sd
+git clone https://github.com/scaleway/prometheus-scw-sd
+```
+
+Get dependencies:
+```
+go get -u -v gopkg.in/alecthomas/kingpin.v2/...
+go get -u -v github.com/go-kit/kit/log/...
+go get -u -v github.com/scaleway/go-scaleway/...
 ```
 
 Build:
