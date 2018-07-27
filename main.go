@@ -39,7 +39,7 @@ var (
 	private    = a.Flag("private", "Use servers private IP.").Bool()
 	outputFile = a.Flag("output.file", "Output file for file_sd compatible file.").Default("scw_sd.json").String()
 	port       = a.Flag("port", "Port on which to scrape metrics.").Default("9100").Int()
-	interval   = a.Flag("time.interval", "Time in second to wait between each refresh.").Default("30").Int()
+	interval   = a.Flag("time.interval", "Time in second to wait between each refresh.").Default("90").Int()
 	logger     log.Logger
 
 	// tagsLabel is the name of the label containing the tags assigned to the target.

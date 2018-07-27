@@ -1,4 +1,4 @@
-# Prometheus Scaleway SD
+# Prometheus SCW Service Discovery
 
 prometheus-scw-sd retrieves your Scaleway server list and converts to Prometheus targets.
 
@@ -32,7 +32,7 @@ Using servers private IP, custom port and time interval in second:
 
 ## Config
 
-Scaleway SD outputs a json file containing targets to scrape.
+prometheus-scw-sd outputs a json file containing targets to scrape.
 You need to include this file in your `prometheus.yml`.
 
 ```yml
@@ -45,7 +45,7 @@ scrape_configs:
 
 ## Labels
 
-Prometheus SD scrape Scaleway servers tags as labels, as comma separated list of strings.
+prometheus-scw-sd scrape Scaleway servers tags as labels, as comma separated list of strings.
 This allows you to use regex substitution for relabelling.
 We surround the separated list with the separator as well. This way regular expressions
 in relabeling rules don't have to consider tag positions.
@@ -66,7 +66,7 @@ Move inside Custom SD folder:
 cd $GOPATH/src/github.com/prometheus/prometheus/documentation/examples/custom-sd
 ```
 
-Clone Scaleway SD:
+Clone prometheus-scw-sd:
 ```
 git clone https://github.com/scaleway/prometheus-scw-sd && cd scw-sd
 ```
