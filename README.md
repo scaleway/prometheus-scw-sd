@@ -25,7 +25,7 @@ Using servers private IP, custom port and time interval in second:
 ./scw-sd \
     --token="$TOKEN"            \
     --output.file="scw_sd.json" \
-    --time.interval="30"        \
+    --time.interval="90"        \
     --port="1234"               \
     --private
 ```
