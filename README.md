@@ -1,6 +1,6 @@
 # Prometheus SCW Service Discovery
 
-prometheus-scw-sd retrieves your Scaleway server list and converts to Prometheus targets.
+Prometheus SCW Service Discovery converts your Scaleway server list and converts to Prometheus targets.
 
 This project is adapted from the official [Consul SD](https://github.com/prometheus/prometheus/tree/master/documentation/examples/custom-sd).
 
@@ -32,7 +32,7 @@ Using servers private IP, custom port and time interval in second:
 
 ## Config
 
-prometheus-scw-sd outputs a json file containing targets to scrape.
+Prometheus SCW Service Discovery outputs a json file containing targets to scrape.
 You need to include this file in your `prometheus.yml`.
 
 ```yml
@@ -45,7 +45,7 @@ scrape_configs:
 
 ## Labels
 
-prometheus-scw-sd scrape Scaleway servers tags as labels, as comma separated list of strings.
+Prometheus SCW Service Discovery scrapes Scaleway servers tags as labels, as comma separated list of strings.
 This allows you to use regex substitution for relabelling.
 We surround the separated list with the separator as well. This way regular expressions
 in relabeling rules don't have to consider tag positions.
