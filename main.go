@@ -28,7 +28,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	api "github.com/scaleway/go-scaleway"
-	scwTypes "github.com/scaleway/go-scaleway/types"
+	scw "github.com/scaleway/go-scaleway/types"
 	"github.com/scaleway/prometheus-scw-sd/adapter"
 	"github.com/scaleway/prometheus-scw-sd/targetgroup"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -43,10 +43,43 @@ var (
 	interval   = a.Flag("time.interval", "Time in second to wait between each refresh.").Default("90").Int()
 	logger     log.Logger
 
-	// tagsLabel is the name of the label containing the tags assigned to the target.
-	tagsLabel = model.MetaLabelPrefix + "scw_tags"
-	// srvArch is the name of the label containing the commercial arch.
-	srvArch = model.MetaLabelPrefix + "scw_arch"
+	scwPrefix = model.MetaLabelPrefix + "scw_"
+	// archLabel is the name for the label containing the server's architecture.
+	archLabel = scwPrefix + "architecture"
+	// commercialTypeLabel is the name for the label containing the server's commercial type.
+	commercialTypeLabel = scwPrefix + "commercial_type"
+	// identifierLabel is the name for the label containing the server's identifier.
+	identifierLabel = scwPrefix + "identifier"
+	// nodeLabel is the name for the label containing the server's name.
+	nameLabel = scwPrefix + "name"
+	// imageIDLabel is the name for the label containing the server's image ID.
+	imageIDLabel = scwPrefix + "image_id"
+	// imageNameLabel is the name for the label containing the server's image name.
+	imageNameLabel = scwPrefix + "image_name"
+	// orgLabel is the name for the label containing the server's organization.
+	orgLabel = scwPrefix + "organization"
+	// privateIPLabel is the name for the label containing the server's private IP.
+	privateIPLabel = scwPrefix + "private_ip"
+	// publicIPLabel is the name for the label containing the server's public IP.
+	publicIPLabel = scwPrefix + "public_ip"
+	// stateLabel is the name for the label containing the server's state.
+	stateLabel = scwPrefix + "state"
+	// tagsLabel is the name for the label containing all the server's tags.
+	tagsLabel = scwPrefix + "tags"
+	// platformLabel is the name for the label containing all the server's platform location.
+	platformLabel = scwPrefix + "platform_id"
+	// hypervisorLabel is the name for the label containing all the server's hypervisor location.
+	hypervisorLabel = scwPrefix + "hypervisor_id"
+	// nodeLabel is the name for the label containing all the server's node location.
+	nodeLabel = scwPrefix + "node_id"
+	// bladeLabel is the name for the label containing all the server's blade location.
+	bladeLabel = scwPrefix + "blade_id"
+	// chassisLabel is the name for the label containing all the server's chassis location.
+	chassisLabel = scwPrefix + "chassis_id"
+	// clusterLabel is the name for the label containing all the server's cluster location.
+	clusterLabel = scwPrefix + "cluster_id"
+	// zoneLabel is the name for the label containing all the server's zone location.
+	zoneLabel = scwPrefix + "zone_id"
 )
 
 // Note: create a config struct for Scaleway SD type here.
@@ -76,20 +109,21 @@ func (d *discovery) scalewayTags(tags []string) string {
 	return scwTags
 }
 
-func (d *discovery) scalewayAddress(server scwTypes.ScalewayServer) string {
+func (d *discovery) scalewayAddress(server scw.ScalewayServer) string {
 	if *private {
 		return net.JoinHostPort(server.PrivateIP, fmt.Sprintf("%d", d.scrapePort))
 	}
 	return net.JoinHostPort(server.PublicAddress.IP, fmt.Sprintf("%d", d.scrapePort))
 }
 
-func (d *discovery) appendScalewayServer(tgs []*targetgroup.Group, server scwTypes.ScalewayServer) []*targetgroup.Group {
+func (d *discovery) appendScalewayServer(tgs []*targetgroup.Group, server scw.ScalewayServer) []*targetgroup.Group {
 	addr := d.scalewayAddress(server)
 	tags := d.scalewayTags(server.Tags)
 	target := model.LabelSet{model.AddressLabel: model.LabelValue(addr)}
 	labels := model.LabelSet{
-		model.LabelName(srvArch):   model.LabelValue(server.Arch),
+		model.LabelName(archLabel): model.LabelValue(server.Arch),
 		model.LabelName(tagsLabel): model.LabelValue(tags),
+		model.LabelName(zoneLabel): model.LabelValue(server.Location.ZoneID),
 	}
 	for i := range tgs {
 		if reflect.DeepEqual(tgs[i].Labels, labels) {
