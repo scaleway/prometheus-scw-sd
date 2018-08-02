@@ -27,7 +27,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	scwApi "github.com/scaleway/go-scaleway"
+	api "github.com/scaleway/go-scaleway"
 	scwTypes "github.com/scaleway/go-scaleway/types"
 	"github.com/scaleway/prometheus-scw-sd/adapter"
 	"github.com/scaleway/prometheus-scw-sd/targetgroup"
@@ -56,33 +56,36 @@ type sdConfig struct {
 	RefreshInterval int
 }
 
-// Discovery retrieves targets information from Scaleway API and updates them via watches.
+// Discovery retrieves targets information from Scaleway API.
 type discovery struct {
-	token           string
+	client          *api.ScalewayAPI
 	refreshInterval int
+	scrapePort      int
 	tagSeparator    string
 	logger          log.Logger
 }
 
-func scalewayTags(tags []string) string {
+func (d *discovery) scalewayTags(tags []string) string {
+	var scwTags string
 	// We surround the separated list with the separator as well. This way regular expressions
 	// in relabeling rules don't have to consider tag positions.
 	if len(tags) > 0 {
 		sort.Strings(tags)
+		scwTags = d.tagSeparator + strings.Join(tags, d.tagSeparator) + d.tagSeparator
 	}
-	return "," + strings.Join(tags, ",") + ","
+	return scwTags
 }
 
-func scalewayAddress(server scwTypes.ScalewayServer) string {
+func (d *discovery) scalewayAddress(server scwTypes.ScalewayServer) string {
 	if *private {
-		return net.JoinHostPort(server.PrivateIP, fmt.Sprintf("%d", *port))
+		return net.JoinHostPort(server.PrivateIP, fmt.Sprintf("%d", d.scrapePort))
 	}
-	return net.JoinHostPort(server.PublicAddress.IP, fmt.Sprintf("%d", *port))
+	return net.JoinHostPort(server.PublicAddress.IP, fmt.Sprintf("%d", d.scrapePort))
 }
 
 func (d *discovery) appendScalewayServer(tgs []*targetgroup.Group, server scwTypes.ScalewayServer) []*targetgroup.Group {
-	addr := scalewayAddress(server)
-	tags := scalewayTags(server.Tags)
+	addr := d.scalewayAddress(server)
+	tags := d.scalewayTags(server.Tags)
 	target := model.LabelSet{model.AddressLabel: model.LabelValue(addr)}
 	labels := model.LabelSet{
 		model.LabelName(srvArch):   model.LabelValue(server.Arch),
@@ -105,19 +108,9 @@ func (d *discovery) appendScalewayServer(tgs []*targetgroup.Group, server scwTyp
 	return tgs
 }
 
-// Note: you must implement this function for your discovery implementation as part of the
-// Discoverer interface. Here you should query your SD for it's list of known targets, determine
-// which of those targets you care about, and then send those targets as a target.TargetGroup to the ch channel.
 func (d *discovery) Run(ctx context.Context, ch chan<- []*targetgroup.Group) {
 	for c := time.Tick(time.Duration(d.refreshInterval) * time.Second); ; {
-		client, err := scwApi.NewScalewayAPI("", d.token, "", "")
-		if err != nil {
-			level.Error(d.logger).Log("msg", "Unable to create Scaleway API client", "err", err)
-			time.Sleep(time.Duration(d.refreshInterval) * time.Second)
-			continue
-		}
-		time.Sleep(time.Duration(2) * time.Second) // rate limit
-		srvs, err := client.GetServers(true, 0)
+		srvs, err := d.client.GetServers(true, 0)
 		if err != nil {
 			level.Error(d.logger).Log("msg", "Error retreiving server list", "err", err)
 			time.Sleep(time.Duration(d.refreshInterval) * time.Second)
@@ -144,16 +137,6 @@ func (d *discovery) Run(ctx context.Context, ch chan<- []*targetgroup.Group) {
 	}
 }
 
-func newDiscovery(conf sdConfig) *discovery {
-	cd := &discovery{
-		token:           conf.Token,
-		refreshInterval: conf.RefreshInterval,
-		tagSeparator:    conf.TagSeparator,
-		logger:          logger,
-	}
-	return cd
-}
-
 func main() {
 	a.HelpFlag.Short('h')
 
@@ -164,17 +147,19 @@ func main() {
 	}
 	logger = log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
-
-	ctx := context.Background()
-
-	// NOTE: create an instance of your new SD implementation here.
-	cfg := sdConfig{
-		TagSeparator:    ",",
-		Token:           *token,
-		RefreshInterval: *interval,
+	client, err := api.NewScalewayAPI("", *token, "", "")
+	if err != nil {
+		fmt.Println("Error creating Scaleway API client, err:", err)
+		return
 	}
-
-	disc := newDiscovery(cfg)
+	ctx := context.Background()
+	disc := &discovery{
+		client:          client,
+		refreshInterval: *interval,
+		scrapePort:      *port,
+		tagSeparator:    ",",
+		logger:          logger,
+	}
 	sdAdapter := adapter.NewAdapter(ctx, *outputFile, "ScalewaySD", disc, logger)
 	sdAdapter.Run()
 
