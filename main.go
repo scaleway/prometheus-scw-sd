@@ -39,7 +39,7 @@ var (
 	a            = kingpin.New("sd adapter usage", "Tool to generate Prometheus file_sd target files for Scaleway.")
 	outputf      = a.Flag("output.file", "The output filename for file_sd compatible file.").Default("scw.json").String()
 	organization = a.Flag("scw.organization", "The Scaleway organization (access key).").Default("").String()
-	region       = a.Flag("scw.region", "The Scaleway region.").Default("par1").String()
+	region       = a.Flag("scw.region", "The Scaleway region.").Default("").String()
 	token        = a.Flag("scw.token", "The authentication token (secret key).").Default("").String()
 	tokenf       = a.Flag("scw.token-file", "The authentication token file.").Default("").String()
 	refresh      = a.Flag("target.refresh", "The refresh interval (in seconds).").Default("30").Int()
