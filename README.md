@@ -6,7 +6,7 @@ This service gets the list of servers from the Scaleway API and generates a file
 
 ## Pre-requisites
 
-You need your Scaleway access key (organization) and secret key (token).
+You need your Scaleway secret key (token). You can create this token [in the console](https://cloud.scaleway.com/#/credentials).
 
 ## Installing it
 
@@ -23,8 +23,8 @@ Flags:
   -h, --help                    Show context-sensitive help (also try --help-long and --help-man).
       --output.file="scw.json"  The output filename for file_sd compatible file.
       --scw.organization=SCW.ORGANIZATION
-                                The Scaleway organization (access key).
       --scw.region="par1"       The Scaleway region.
+                                The Scaleway organization.
       --scw.token=""            The authentication token (secret key).
       --scw.token-file=""       The authentication token file.
       --target.refresh=30       The refresh interval (in seconds).
