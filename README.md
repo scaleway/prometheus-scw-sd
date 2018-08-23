@@ -1,5 +1,7 @@
 A service discovery for the [Scaleway](https://www.scaleway.com/) cloud platform compatible with [Prometheus](https://prometheus.io).
 
+Credits to [Simon Pasquier](https://github.com/simonpasquier) who wrotes most of the code on hiw own repository before merging it into this one.
+
 ## How it works
 
 This service gets the list of servers from the Scaleway API and generates a file which is compatible with the Prometheus `file_sd` mechanism.
