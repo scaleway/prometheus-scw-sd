@@ -15,7 +15,7 @@ Download the binary from the [Releases](https://github.com/simonpasquier/prometh
 ## Running it
 
 ```
-usage: sd adapter usage --scw.organization=SCW.ORGANIZATION [<flags>]
+usage: sd adapter usage --scw.token=SCW.TOKEN [<flags>]
 
 Tool to generate Prometheus file_sd target files for Scaleway.
 
