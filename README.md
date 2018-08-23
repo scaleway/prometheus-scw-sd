@@ -23,8 +23,8 @@ Flags:
   -h, --help                    Show context-sensitive help (also try --help-long and --help-man).
       --output.file="scw.json"  The output filename for file_sd compatible file.
       --scw.organization=SCW.ORGANIZATION
-      --scw.region="par1"       The Scaleway region.
                                 The Scaleway organization.
+      --scw.region="par1"       The Scaleway region. Leaving blank will fetch from all the regions.
       --scw.token=""            The authentication token (secret key).
       --scw.token-file=""       The authentication token file.
       --target.refresh=30       The refresh interval (in seconds).
