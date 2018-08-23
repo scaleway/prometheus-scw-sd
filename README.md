@@ -1,71 +1,94 @@
-# Prometheus SCW Service Discovery
+A service discovery for the [Scaleway](https://www.scaleway.com/) cloud platform compatible with [Prometheus](https://prometheus.io).
 
-Prometheus SCW Service Discovery converts your Scaleway server list and converts to Prometheus targets.
+## How it works
 
-This project is adapted from the official [Consul SD](https://github.com/prometheus/prometheus/tree/master/documentation/examples/custom-sd).
+This service gets the list of servers from the Scaleway API and generates a file which is compatible with the Prometheus `file_sd` mechanism.
 
-An official Prometheus [blog post](https://prometheus.io/blog/2018/07/05/implementing-custom-sd/) explains how to write a Custom Service Discovery.
+## Pre-requisites
 
-## Usage
+You need your Scaleway access key (organization) and secret key (token).
 
-Download the binary from the last release, corresponding to your own architecture.
+## Installing it
 
-Help:
+Download the binary from the [Releases](https://github.com/simonpasquier/prometheus-scaleway-sd/releases) page.
+
+## Running it
+
 ```
-./prometheus-scw-sd -h
-```
+usage: sd adapter usage --scw.organization=SCW.ORGANIZATION [<flags>]
 
-Start the discoverer:
-```
-./prometheus-scw-sd --token="$TOKEN" --output.file="prometheus-scw-sd.json"
-```
+Tool to generate Prometheus file_sd target files for Scaleway.
 
-Using servers private IP, custom port and time interval in second:
-```
-./prometheus-scw-sd \
-    --token="$TOKEN"                       \
-    --output.file="prometheus-scw-sd.json" \
-    --time.interval="90"                   \
-    --port="1234"                          \
-    --private
-```
-
-## Config
-
-Prometheus SCW Service Discovery outputs a json file containing targets to scrape.
-You need to include this file in your `prometheus.yml`.
-
-```yml
-scrape_configs:
-  - job_name: 'scw-sd'
-    file_sd_configs:
-      - files:
-        - path/to/prometheus-scw-sd.json
+Flags:
+  -h, --help                    Show context-sensitive help (also try --help-long and --help-man).
+      --output.file="scw.json"  The output filename for file_sd compatible file.
+      --scw.organization=SCW.ORGANIZATION
+                                The Scaleway organization (access key).
+      --scw.region="par1"       The Scaleway region.
+      --scw.token=""            The authentication token (secret key).
+      --scw.token-file=""       The authentication token file.
+      --target.refresh=30       The refresh interval (in seconds).
+      --target.port=80          The default port number for targets.
+      --web.listen-address=":9465"
+                                The listen address.
+      --version                 Show application version.
 ```
 
-## Labels
+## Integration with Prometheus
 
-Prometheus SCW Service Discovery scrapes Scaleway servers tags as labels, as comma separated list of strings.
-This allows you to use regex substitution for relabelling.
-We surround the separated list with the separator as well. This way regular expressions
-in relabeling rules don't have to consider tag positions.
+Here is a Prometheus `scrape_config` snippet that configures Prometheus to scrape node_exporter assuming that it is deployed on all your Scaleway servers.
+
+```yaml
+- job_name: node
+
+  # Assuming that prometheus and prometheus-scaleway-sd are started from the same directory.
+  file_sd_configs:
+  - files: [ "./scw.json" ]
+
+  # The relabeling does the following:
+  # - overwrite the scrape address with the node_exporter's port.
+  # - strip leading commas from the tags label.
+  # - save the region label (par1/ams1).
+  # - overwrite the instance label with the server's name.
+  relabel_configs:
+  - source_labels: [__meta_scaleway_private_ip]
+    replacement: "${1}:9100"
+    target_label: __address__
+  - source_labels: [__meta_scaleway_tags]
+    regex: ",(.+),"
+    target_label: tags
+  - source_labels: [__meta_scaleway_location_zone_id]
+    target_label: region
+  - source_labels: [__meta_scaleway_name]
+    target_label: instance
+```
+
+The following meta labels are available on targets during relabeling:
+
+* `__meta_scaleway_architecture`: the architecture of the server.
+* `__meta_scaleway_blade_id`: the identifier of the blade (can be empty).
+* `__meta_scaleway_chassis_id`: the identifier of the chassis (can be empty).
+* `__meta_scaleway_cluster_id`: the identifier of the cluster (can be empty).
+* `__meta_scaleway_commercial_type`: the commercial type of the server (eg START1-XS).
+* `__meta_scaleway_hypervisor_id`: the identifier of the hypervisor.
+* `__meta_scaleway_identifier`: the identifier of the server.
+* `__meta_scaleway_image_id`: the identifier of the server's image.
+* `__meta_scaleway_image_name`: the name of the server's image.
+* `__meta_scaleway_name`: the name of the server.
+* `__meta_scaleway_node_id`: the identifier of the node.
+* `__meta_scaleway_organization`: the organization owning the server.
+* `__meta_scaleway_platform_id`: the identifier of the platform.
+* `__meta_scaleway_private_ip`: the private IP address of the server.
+* `__meta_scaleway_public_ip`: the public IP address of the server (can be empty).
+* `__meta_scaleway_state`: the state of the server.
+* `__meta_scaleway_tags`: comma-separated list of tags associated to the server (trailing commas on both sides).
+* `__meta_scaleway_zone_id`: the identifier of the zone (region).
 
 
-## Contribute
+## Contributing
 
-Clone prometheus-scw-sd:
-```
-git clone https://github.com/scaleway/prometheus-scw-sd
-```
+PRs and issues are welcome.
 
-Get dependencies:
-```
-go get -u -v gopkg.in/alecthomas/kingpin.v2/...
-go get -u -v github.com/go-kit/kit/log/...
-go get -u -v github.com/scaleway/go-scaleway/...
-```
+## License
 
-Build:
-```
-go build
-```
+Apache License 2.0, see [LICENSE](https://github.com/simonpasquier/prometheus-scaleway-sd/blob/master/LICENSE).
