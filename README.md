@@ -1,6 +1,6 @@
 A service discovery for the [Scaleway](https://www.scaleway.com/) cloud platform compatible with [Prometheus](https://prometheus.io).
 
-Credits to [Simon Pasquier](https://github.com/simonpasquier) who wrotes most of the code on hiw own repository before merging it into this one.
+Credits to [Simon Pasquier](https://github.com/simonpasquier) who wrotes most of the code on his own repository before merging it into this one.
 
 ## How it works
 
