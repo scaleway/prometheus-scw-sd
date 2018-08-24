@@ -17,7 +17,7 @@ Download the binary from the [Releases](https://github.com/scaleway/prometheus-s
 ## Running it
 
 ```
-usage: sd adapter usage --scw.token=SCW.TOKEN [<flags>]
+usage: sd adapter usage --scw.token-file=my-token.txt [<flags>]
 
 Tool to generate Prometheus file_sd target files for Scaleway.
 
@@ -27,8 +27,7 @@ Flags:
       --scw.organization=SCW.ORGANIZATION
                                 The Scaleway organization.
       --scw.region="par1"       The Scaleway region. Leaving blank will fetch from all the regions.
-      --scw.token=""            The authentication token (secret key).
-      --scw.token-file=""       The authentication token file.
+      --scw.token-file=""       The authentication token file containing Scaleway Secret Key.
       --target.refresh=30       The refresh interval (in seconds).
       --target.port=80          The default port number for targets.
       --web.listen-address=":9465"
