@@ -12,7 +12,7 @@ You need your Scaleway secret key (token). You can create this token [in the con
 
 ## Installing it
 
-Download the binary from the [Releases](https://github.com/simonpasquier/prometheus-scaleway-sd/releases) page.
+Download the binary from the [Releases](https://github.com/scaleway/prometheus-scw-sd/releases) page.
 
 ## Running it
 
@@ -93,4 +93,4 @@ PRs and issues are welcome.
 
 ## License
 
-Apache License 2.0, see [LICENSE](https://github.com/simonpasquier/prometheus-scaleway-sd/blob/master/LICENSE).
+Apache License 2.0, see [LICENSE](https://github.com/scaleway/prometheus-scw-sd/blob/master/LICENSE).
