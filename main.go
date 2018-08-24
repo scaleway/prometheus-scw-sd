@@ -40,7 +40,6 @@ var (
 	outputf      = a.Flag("output.file", "The output filename for file_sd compatible file.").Default("scw.json").String()
 	organization = a.Flag("scw.organization", "The Scaleway organization.").Default("").String()
 	region       = a.Flag("scw.region", "The Scaleway region.").Default("").String()
-	token        = a.Flag("scw.token", "The authentication token (secret key).").Default("").String()
 	tokenf       = a.Flag("scw.token-file", "The authentication token file.").Default("").String()
 	refresh      = a.Flag("target.refresh", "The refresh interval (in seconds).").Default("30").Int()
 	port         = a.Flag("target.port", "The default port number for targets.").Default("80").Int()
@@ -261,26 +260,24 @@ func main() {
 		),
 	}
 
-	if *token == "" && *tokenf == "" {
-		fmt.Println("need to pass --scw.token or --scw.token-file")
+	token := ""
+
+	if *tokenf == "" {
+		fmt.Println("need to pass --scw.token-file")
 		os.Exit(1)
 	}
 	if *tokenf != "" {
-		if *token != "" {
-			fmt.Println("cannot pass --scw.token and --scw.token-file at the same time")
-			os.Exit(1)
-		}
 		b, err := ioutil.ReadFile(*tokenf)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		*token = strings.TrimSpace(strings.TrimRight(string(b), "\n"))
+		token = strings.TrimSpace(strings.TrimRight(string(b), "\n"))
 	}
 
 	client, err := api.NewScalewayAPI(
 		*organization,
-		*token,
+		token,
 		"Prometheus/SD-Agent",
 		*region,
 		func(s *api.ScalewayAPI) {
