@@ -1,8 +1,8 @@
 repository:
-    path: github.com/simonpasquier/prometheus-scaleway-sd
+    path: github.com/scaleway/prometheus-scw-sd
 build:
     binaries:
-        - name: prometheus-scaleway-sd
+        - name: prometheus-scw-sd
           path: .
     flags: -a -tags netgo
     ldflags: |

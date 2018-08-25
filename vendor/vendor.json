@@ -1791,5 +1791,5 @@
 			"revisionTime": "2017-03-31T20:34:26Z"
 		}
 	],
-	"rootPath": "github.com/simonpasquier/prometheus-scaleway-sd"
+	"rootPath": "github.com/scaleway/prometheus-scw-sd"
 }

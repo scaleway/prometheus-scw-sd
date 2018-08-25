@@ -42,7 +42,7 @@ Here is a Prometheus `scrape_config` snippet that configures Prometheus to scrap
 ```yaml
 - job_name: node
 
-  # Assuming that prometheus and prometheus-scaleway-sd are started from the same directory.
+  # Assuming that prometheus and prometheus-scw-sd are started from the same directory.
   file_sd_configs:
   - files: [ "./scw.json" ]
 

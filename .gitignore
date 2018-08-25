@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-prometheus-scaleway-sd
+prometheus-scw-sd
 
 # Test binary, build with `go test -c`
 *.test

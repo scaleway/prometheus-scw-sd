@@ -13,4 +13,4 @@
 
 include Makefile.common
 
-DOCKER_IMAGE_NAME       ?= prometheus-scaleway-sd
+DOCKER_IMAGE_NAME       ?= prometheus-scw-sd

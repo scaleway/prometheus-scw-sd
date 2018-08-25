@@ -245,7 +245,7 @@ func (d *scwDiscoverer) Run(ctx context.Context, ch chan<- []*targetgroup.Group)
 func main() {
 	a.HelpFlag.Short('h')
 
-	a.Version(version.Print("prometheus-scaleway-sd"))
+	a.Version(version.Print("prometheus-scw-sd"))
 
 	_, err := a.Parse(os.Args[1:])
 	if err != nil {
